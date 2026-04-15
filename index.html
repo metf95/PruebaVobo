@@ -1,0 +1,817 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VoBo 1 — Coca-Cola FEMSA</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    /* ── Coca-Cola Red palette ── */
+    --red:#CC0000; --red-soft:#E83333; --red-light:#FFE5E5;
+    --cream:#F7F3EE; --sand:#EAE0D5; --stone:#C4B5A5;
+    --charcoal:#1C1210; --mid:#6B5E52;
+    --glass:rgba(255,255,255,0.6); --glass-border:rgba(255,255,255,0.75);
+    --shadow:0 8px 40px rgba(28,18,16,0.10); --radius:20px;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--charcoal);min-height:100vh;overflow-x:hidden;}
+
+  .bg{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden;}
+  .blob{position:absolute;border-radius:50%;filter:blur(90px);opacity:0.35;}
+  .blob-1{width:560px;height:560px;background:radial-gradient(circle,#F4A9A9,transparent 70%);top:-140px;right:-120px;}
+  .blob-2{width:400px;height:400px;background:radial-gradient(circle,#D4C4B5,transparent 70%);bottom:60px;left:-100px;}
+  .blob-3{width:300px;height:300px;background:radial-gradient(circle,#CC000033,transparent 70%);top:38%;left:58%;}
+
+  .app{position:relative;z-index:1;max-width:720px;margin:0 auto;padding:40px 20px 80px;}
+
+  /* Header */
+  .header{text-align:center;margin-bottom:48px;animation:fadeUp 0.6s ease both;}
+  .logo-row{display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:8px;}
+  .logo-dot{width:10px;height:10px;background:var(--red);border-radius:50%;}
+  .logo-text{font-size:11px;letter-spacing:0.25em;text-transform:uppercase;color:var(--mid);font-weight:500;}
+  h1{font-family:'Playfair Display',serif;font-size:clamp(28px,5vw,42px);font-weight:400;line-height:1.15;}
+  h1 em{font-style:italic;color:var(--red);}
+  .subtitle{margin-top:10px;font-size:14px;color:var(--mid);font-weight:300;}
+
+  /* Progress */
+  .progress-wrap{margin-bottom:36px;animation:fadeUp 0.6s 0.1s ease both;}
+  .progress-labels{display:flex;justify-content:space-between;font-size:11px;color:var(--stone);margin-bottom:8px;letter-spacing:0.05em;text-transform:uppercase;}
+  .progress-bar{height:3px;background:var(--sand);border-radius:99px;overflow:hidden;}
+  .progress-fill{height:100%;background:linear-gradient(90deg,var(--red),var(--red-soft));border-radius:99px;transition:width 0.5s cubic-bezier(.4,0,.2,1);}
+  .steps-nav{display:flex;gap:6px;justify-content:center;margin-bottom:36px;}
+  .step-dot{width:6px;height:6px;border-radius:99px;background:var(--sand);transition:all 0.3s ease;cursor:pointer;}
+  .step-dot.active{background:var(--red);width:22px;}
+  .step-dot.done{background:var(--stone);}
+
+  /* Card */
+  .card{background:var(--glass);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border:1px solid var(--glass-border);border-radius:var(--radius);padding:36px;box-shadow:var(--shadow);margin-bottom:16px;animation:fadeUp 0.5s ease both;}
+  .section-label{display:flex;align-items:center;gap:10px;margin-bottom:28px;}
+  .section-icon{width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,var(--red),var(--red-soft));display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;}
+  .section-title{font-family:'Playfair Display',serif;font-size:20px;font-weight:600;}
+  .section-desc{font-size:12px;color:var(--mid);margin-top:2px;}
+
+  /* Fields */
+  .field{margin-bottom:22px;}
+  .field label{display:block;font-size:12px;font-weight:500;color:var(--mid);letter-spacing:0.06em;text-transform:uppercase;margin-bottom:8px;}
+  .field input[type="text"],.field input[type="date"],.field textarea{
+    width:100%;background:rgba(255,255,255,0.65);border:1.5px solid var(--sand);border-radius:12px;
+    padding:13px 16px;font-family:'DM Sans',sans-serif;font-size:14px;color:var(--charcoal);
+    outline:none;transition:border-color 0.2s,box-shadow 0.2s;resize:none;
+  }
+  .field input:focus,.field textarea:focus{border-color:var(--red);box-shadow:0 0 0 3px rgba(204,0,0,0.10);background:rgba(255,255,255,0.9);}
+  .field textarea{min-height:80px;}
+
+  /* Chips */
+  .chips{display:flex;flex-wrap:wrap;gap:8px;}
+  .chip{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:99px;border:1.5px solid var(--sand);background:rgba(255,255,255,0.55);font-size:13px;color:var(--mid);cursor:pointer;transition:all 0.2s;user-select:none;font-family:'DM Sans',sans-serif;}
+  .chip:hover{border-color:#F4A9A9;background:rgba(204,0,0,0.05);}
+  .chip.selected{border-color:var(--red);background:linear-gradient(135deg,rgba(204,0,0,0.09),rgba(232,51,51,0.06));color:var(--red);font-weight:500;}
+
+  .chips-with-other{display:flex;flex-wrap:wrap;gap:8px;align-items:center;}
+  .chip-other-input{display:none;border:1.5px solid var(--red);border-radius:12px;padding:7px 14px;font-family:'DM Sans',sans-serif;font-size:13px;color:var(--charcoal);outline:none;background:rgba(255,255,255,0.9);width:160px;}
+  .chip-other-input:focus{border-color:var(--red);box-shadow:0 0 0 3px rgba(204,0,0,0.10);}
+  .chip-other-input.show{display:inline-block;animation:fadeUp 0.2s ease;}
+
+  /* Toggles */
+  .toggle-group{display:flex;gap:10px;}
+  .toggle-btn{flex:1;padding:11px;border-radius:12px;border:1.5px solid var(--sand);background:rgba(255,255,255,0.55);font-size:13px;color:var(--mid);cursor:pointer;transition:all 0.2s;text-align:center;font-family:'DM Sans',sans-serif;}
+  .toggle-btn:hover{border-color:#F4A9A9;}
+  .toggle-btn.selected{border-color:var(--red);background:linear-gradient(135deg,rgba(204,0,0,0.08),rgba(232,51,51,0.05));color:var(--red);font-weight:500;}
+
+  /* Reveal */
+  .reveal{display:none;margin-top:18px;padding-top:18px;border-top:1px solid var(--sand);}
+  .reveal.show{display:block;animation:fadeUp 0.3s ease;}
+  .sub-reveal{display:none;margin-top:12px;}
+  .sub-reveal.show{display:block;animation:fadeUp 0.25s ease;}
+  .sub-label{font-size:11px;color:var(--mid);margin-bottom:8px;font-weight:500;letter-spacing:0.04em;}
+
+  /* Video option cards */
+  .video-options{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:4px;}
+  .video-opt{border:2px solid var(--sand);border-radius:16px;overflow:hidden;cursor:pointer;transition:all 0.25s;background:rgba(255,255,255,0.55);}
+  .video-opt:hover{border-color:#F4A9A9;transform:translateY(-2px);box-shadow:0 6px 24px rgba(204,0,0,0.10);}
+  .video-opt.selected{border-color:var(--red);box-shadow:0 6px 24px rgba(204,0,0,0.18);}
+  .video-thumb-placeholder{width:100%;aspect-ratio:16/9;background:linear-gradient(135deg,var(--sand),#E0D0C0);display:flex;align-items:center;justify-content:center;font-size:28px;}
+  .video-opt-body{padding:12px 14px;}
+  .video-opt-title{font-size:13px;font-weight:500;color:var(--charcoal);margin-bottom:3px;}
+  .video-opt-desc{font-size:11px;color:var(--stone);line-height:1.5;}
+  .video-opt-check{display:none;color:var(--red);font-size:14px;font-weight:700;}
+  .video-opt.selected .video-opt-check{display:inline;}
+  .video-opt-header{display:flex;align-items:center;justify-content:space-between;}
+  .video-opt-link{display:inline-flex;align-items:center;gap:4px;font-size:11px;color:var(--red);text-decoration:none;margin-top:6px;}
+  .video-opt-link:hover{text-decoration:underline;}
+
+  /* Slider 3 steps */
+  .slider3-options{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-top:4px;}
+  .slider3-opt{border:1.5px solid var(--sand);border-radius:14px;padding:14px 12px;cursor:pointer;transition:all 0.2s;background:rgba(255,255,255,0.55);text-align:center;}
+  .slider3-opt:hover{border-color:#F4A9A9;background:rgba(204,0,0,0.04);}
+  .slider3-opt.selected{border-color:var(--red);background:linear-gradient(135deg,rgba(204,0,0,0.07),rgba(232,51,51,0.04));}
+  .slider3-ratio{font-family:'Playfair Display',serif;font-size:17px;font-weight:600;color:var(--red);margin-bottom:6px;}
+  .slider3-label{font-size:10px;color:var(--stone);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px;}
+  .slider3-hint{font-size:11px;color:var(--mid);line-height:1.5;}
+
+  /* Nav */
+  .nav-row{display:flex;gap:12px;margin-top:8px;animation:fadeUp 0.5s 0.15s ease both;}
+  .btn{flex:1;padding:16px 24px;border-radius:14px;border:none;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:15px;font-weight:500;transition:all 0.25s;}
+  .btn-back{background:rgba(255,255,255,0.55);border:1.5px solid var(--sand);color:var(--mid);flex:0 0 auto;padding:16px 20px;}
+  .btn-back:hover{background:rgba(255,255,255,0.85);}
+  .btn-next{background:linear-gradient(135deg,var(--red),var(--red-soft));color:white;box-shadow:0 4px 20px rgba(204,0,0,0.28);}
+  .btn-next:hover{transform:translateY(-1px);box-shadow:0 6px 28px rgba(204,0,0,0.38);}
+  .btn-generate{background:var(--charcoal);color:white;box-shadow:0 4px 20px rgba(28,18,16,0.25);}
+  .btn-generate:hover{background:#0e0908;transform:translateY(-1px);}
+  .btn-generate:disabled{opacity:0.6;cursor:not-allowed;transform:none;}
+
+  .step{display:none;}
+  .step.active{display:block;}
+
+  /* ── RECAP – screen ── */
+  .recap-outer{margin-top:24px;display:none;}
+  .recap-card{background:rgba(255,255,255,0.88);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border:1px solid var(--glass-border);border-radius:var(--radius);padding:40px;box-shadow:var(--shadow);margin-bottom:16px;}
+  .recap-top{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:28px;padding-bottom:22px;border-bottom:2.5px solid var(--charcoal);}
+  .recap-badge{display:inline-block;background:var(--red);color:white;font-size:10px;letter-spacing:0.15em;text-transform:uppercase;padding:4px 12px;border-radius:99px;font-weight:600;margin-bottom:10px;}
+  .recap-titulo{font-family:'Playfair Display',serif;font-size:24px;font-weight:600;}
+  .recap-meta{font-size:13px;color:var(--mid);margin-top:4px;}
+  .recap-fecha{font-size:12px;color:var(--stone);text-align:right;white-space:nowrap;margin-top:6px;}
+  .recap-sections{display:grid;}
+  .recap-sec{display:grid;grid-template-columns:155px 1fr;gap:16px;padding:15px 0;border-bottom:1px solid var(--sand);align-items:start;}
+  .recap-sec:last-child{border-bottom:none;}
+  .recap-sec-label{font-size:10px;font-weight:500;letter-spacing:0.12em;text-transform:uppercase;color:var(--stone);padding-top:2px;}
+  .recap-sec-val{font-size:14px;color:var(--charcoal);line-height:1.7;}
+  .recap-loading{display:flex;align-items:center;gap:12px;color:var(--mid);font-size:14px;padding:24px 0;}
+  .spinner{width:18px;height:18px;border:2px solid var(--sand);border-top-color:var(--red);border-radius:50%;animation:spin 0.8s linear infinite;flex-shrink:0;}
+  .recap-alcance{margin-top:22px;padding:14px 16px;background:rgba(204,0,0,0.05);border:1px solid rgba(204,0,0,0.18);border-radius:12px;font-size:12px;color:var(--mid);line-height:1.6;}
+  .recap-alcance strong{color:var(--red);}
+
+  .print-row{display:flex;gap:12px;margin-bottom:12px;}
+  .btn-print{flex:1;padding:16px;border-radius:14px;border:1.5px solid var(--sand);background:rgba(255,255,255,0.6);color:var(--mid);font-family:'DM Sans',sans-serif;font-size:15px;font-weight:500;cursor:pointer;transition:all 0.2s;}
+  .btn-print:hover{background:rgba(255,255,255,0.95);}
+  .btn-approve{flex:1;padding:16px;border-radius:14px;border:none;background:linear-gradient(135deg,#2C7A4B,#3D9E62);color:white;font-family:'DM Sans',sans-serif;font-size:15px;font-weight:500;cursor:pointer;transition:all 0.2s;box-shadow:0 4px 20px rgba(44,122,75,0.28);}
+  .btn-approve:hover{transform:translateY(-1px);}
+
+  .stamp{display:none;text-align:center;padding:28px 20px;animation:fadeUp 0.4s ease both;}
+  .stamp.show{display:block;}
+  .stamp-inner{display:inline-block;border:3px solid #2C7A4B;border-radius:14px;padding:16px 36px;}
+  .stamp-text{font-family:'Playfair Display',serif;font-size:26px;color:#2C7A4B;font-style:italic;transform:rotate(-2deg);display:block;}
+  .stamp-sub{margin-top:8px;font-size:12px;color:var(--stone);}
+
+  @keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+  @keyframes spin{to{transform:rotate(360deg)}}
+
+  /* ═══════════════════════════════════
+     PRINT — abre ventana separada con
+     solo el recap renderizado en HTML
+  ════════════════════════════════════ */
+  @media print {
+    * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+    body { background: white !important; margin: 0; padding: 0; }
+    .no-print { display: none !important; }
+    .print-only { display: block !important; }
+    .recap-print-wrap { padding: 32px 40px; max-width: 800px; margin: 0 auto; font-family: 'DM Sans', sans-serif; }
+    .rp-badge { display: inline-block; background: #CC0000; color: white; font-size: 9px; letter-spacing: 0.15em; text-transform: uppercase; padding: 3px 10px; border-radius: 99px; font-weight: 600; margin-bottom: 8px; }
+    .rp-title { font-family: 'Playfair Display', serif; font-size: 26px; font-weight: 600; color: #1C1210; }
+    .rp-meta { font-size: 12px; color: #6B5E52; margin-top: 3px; }
+    .rp-fecha { font-size: 12px; color: #6B5E52; }
+    .rp-top { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #1C1210; padding-bottom: 14px; margin-bottom: 20px; }
+    .rp-sec { display: grid; grid-template-columns: 140px 1fr; gap: 12px; padding: 11px 0; border-bottom: 1px solid #EAE0D5; }
+    .rp-sec:last-child { border-bottom: none; }
+    .rp-label { font-size: 9px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: #C4B5A5; padding-top: 2px; }
+    .rp-val { font-size: 12px; color: #1C1210; line-height: 1.65; }
+    .rp-alcance { margin-top: 18px; padding: 12px 14px; background: #FFF0F0; border: 1px solid #CC0000; border-radius: 8px; font-size: 11px; color: #6B5E52; line-height: 1.6; }
+    .rp-alcance strong { color: #CC0000; }
+    .rp-stamp { margin-top: 24px; text-align: center; }
+    .rp-stamp-inner { display: inline-block; border: 2.5px solid #2C7A4B; border-radius: 10px; padding: 12px 28px; }
+    .rp-stamp-txt { font-family: 'Playfair Display', serif; font-size: 20px; color: #2C7A4B; font-style: italic; }
+    .rp-stamp-sub { font-size: 10px; color: #C4B5A5; margin-top: 4px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ── Hidden print target (populated on generate) ── -->
+<div id="print-target" style="display:none"></div>
+
+<div class="bg no-print">
+  <div class="blob blob-1"></div>
+  <div class="blob blob-2"></div>
+  <div class="blob blob-3"></div>
+</div>
+
+<div class="app no-print">
+
+  <div class="header">
+    <div class="logo-row"><div class="logo-dot"></div><span class="logo-text">Producción de Video con IA · Coca-Cola FEMSA</span><div class="logo-dot"></div></div>
+    <h1>Recap y Validación<br><em>VoBo 1</em></h1>
+    <p class="subtitle">Toma de orden antes de producción</p>
+  </div>
+
+  <div class="progress-wrap">
+    <div class="progress-labels"><span id="step-label">Paso 1 de 7</span><span id="step-name">Proyecto</span></div>
+    <div class="progress-bar"><div class="progress-fill" id="progress-fill" style="width:14.3%"></div></div>
+  </div>
+  <div class="steps-nav" id="steps-nav"></div>
+
+  <!-- ══ STEP 1: Proyecto ══ -->
+  <div class="step active" id="step-1">
+    <div class="card">
+      <div class="section-label">
+        <div class="section-icon">📋</div>
+        <div><div class="section-title">Datos del proyecto</div><div class="section-desc">Información general para comenzar</div></div>
+      </div>
+      <div class="field"><label>Nombre del proyecto</label><input type="text" id="f-proyecto" placeholder="Ej: Video Lanzamiento Q2 2025"></div>
+      <div class="field"><label>Contacto / Aprobador</label><input type="text" id="f-contacto" placeholder="Nombre del aprobador"></div>
+      <div class="field"><label>Fecha de entrega requerida</label><input type="date" id="f-fecha"></div>
+      <div class="field">
+        <label>Idioma del video</label>
+        <div class="chips-with-other">
+          <div class="chip" data-grp="idioma" data-val="Español" onclick="pickChip(this,'idioma','idioma-inp')">Español</div>
+          <div class="chip" data-grp="idioma" data-val="Inglés" onclick="pickChip(this,'idioma','idioma-inp')">Inglés</div>
+          <div class="chip" data-grp="idioma" data-val="Bilingüe" onclick="pickChip(this,'idioma','idioma-inp')">Bilingüe</div>
+          <div class="chip" data-grp="idioma" data-val="__otro__" onclick="pickChip(this,'idioma','idioma-inp',true)">Otro</div>
+          <input type="text" id="idioma-inp" class="chip-other-input" placeholder="Especifica...">
+        </div>
+      </div>
+      <div class="field">
+        <label>¿Subtítulos?</label>
+        <div class="chips-with-other">
+          <div class="chip" data-grp="sub" data-val="Sí en español" onclick="pickChip(this,'sub','sub-inp')">Sí en español</div>
+          <div class="chip" data-grp="sub" data-val="Sí en inglés" onclick="pickChip(this,'sub','sub-inp')">Sí en inglés</div>
+          <div class="chip" data-grp="sub" data-val="Sin subtítulos" onclick="pickChip(this,'sub','sub-inp')">Sin subtítulos</div>
+          <div class="chip" data-grp="sub" data-val="__otro__" onclick="pickChip(this,'sub','sub-inp',true)">Otro</div>
+          <input type="text" id="sub-inp" class="chip-other-input" placeholder="Especifica...">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ STEP 2: Guión ══ -->
+  <div class="step" id="step-2">
+    <div class="card">
+      <div class="section-label">
+        <div class="section-icon">📝</div>
+        <div><div class="section-title">Guión</div><div class="section-desc">¿Ya tienes guión o lo construimos juntos?</div></div>
+      </div>
+      <div class="field">
+        <label>¿Tienes guión?</label>
+        <div class="toggle-group">
+          <button class="toggle-btn" data-grp="tiene-guion" data-val="Sí" onclick="tog(this,'g-si','g-no')">✅ Sí, ya tengo guión</button>
+          <button class="toggle-btn" data-grp="tiene-guion" data-val="No" onclick="tog(this,'g-no','g-si')">✏️ Lo construimos juntos</button>
+        </div>
+      </div>
+      <div class="reveal" id="g-si">
+        <div class="field">
+          <label>¿El guión requiere cambios o se mantiene igual?</label>
+          <div class="toggle-group">
+            <button class="toggle-btn" data-grp="g-cambios" data-val="Requiere cambios" onclick="tog(this,'g-cambios-si',null)">✏️ Requiere cambios</button>
+            <button class="toggle-btn" data-grp="g-cambios" data-val="Se mantiene igual" onclick="hideRev('g-cambios-si',this)">✅ Se mantiene igual</button>
+          </div>
+        </div>
+        <div class="reveal" id="g-cambios-si">
+          <div class="field"><label>¿Qué te brinca más del guión actual?</label><textarea id="f-brinca" placeholder="Lo que más te molesta o quisieras cambiar..."></textarea></div>
+          <div class="field"><label>¿Qué sí te gusta del guión?</label><textarea id="f-gusta" placeholder="Lo que quieres conservar a toda costa..."></textarea></div>
+          <div class="field">
+            <label>¿Qué se puede ajustar?</label>
+            <div class="chips" data-group="g-ajuste">
+              <div class="chip" data-val="Tiempo / duración">Tiempo / duración</div>
+              <div class="chip" data-val="Ideas y estructura">Ideas y estructura</div>
+              <div class="chip" data-val="Wording / redacción">Wording / redacción</div>
+              <div class="chip" data-val="Todo lo anterior">Todo lo anterior</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="reveal" id="g-no">
+        <div class="field"><label>Mensaje central</label><textarea id="f-mensaje" placeholder="Lo más importante que debe quedarse en el espectador..."></textarea></div>
+        <div class="field"><label>¿A quién va dirigido el video?</label><input type="text" id="f-audiencia" placeholder="Ej: operadores en planta, líderes de área, equipo comercial..."></div>
+        <div class="field"><label>¿Qué emoción o acción quieres generar?</label><textarea id="f-accion" placeholder="Ej: que se sientan motivados, que entiendan el proceso, que quieran inscribirse..."></textarea></div>
+        <div class="field"><label>¿Tienes alguna referencia de video?</label><input type="text" id="f-referencia" placeholder="Liga, nombre de campaña o descripción del estilo..."></div>
+        <div class="field"><label>Duración deseada</label><input type="text" id="f-duracion" placeholder="Ej: 30 seg, 1 min, 2 min, sin límite"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ STEP 3: Formato ══ -->
+  <div class="step" id="step-3">
+    <div class="card">
+      <div class="section-label">
+        <div class="section-icon">📐</div>
+        <div><div class="section-title">Formato</div><div class="section-desc">Relación de aspecto y plataforma</div></div>
+      </div>
+      <div class="field">
+        <label>Aspect ratio</label>
+        <div class="chips" data-group="ratio" data-single="true">
+          <div class="chip" data-val="Vertical (9:16)">📱 Vertical 9:16</div>
+          <div class="chip" data-val="Horizontal (16:9)">🖥️ Horizontal 16:9</div>
+          <div class="chip" data-val="Cuadrado (1:1)">⬜ Cuadrado 1:1</div>
+        </div>
+      </div>
+      <div class="field"><label>Plataforma de distribución</label><input type="text" id="f-plataforma" placeholder="Ej: Instagram Reels, LinkedIn, presentación interna, pantalla en planta..."></div>
+    </div>
+  </div>
+
+  <!-- ══ STEP 4: Tipo de video ══ -->
+  <div class="step" id="step-4">
+    <div class="card">
+      <div class="section-label">
+        <div class="section-icon">🎬</div>
+        <div><div class="section-title">Tipo de video</div><div class="section-desc">¿Sale un avatar o solo voz en off?</div></div>
+      </div>
+      <div class="field">
+        <label>¿El video lleva avatar / persona hablando a cámara?</label>
+        <div class="video-options">
+          <div class="video-opt" id="opt-avatar" onclick="selectVideoType('avatar')">
+            <div class="video-thumb-placeholder">🧑‍💼</div>
+            <div class="video-opt-body">
+              <div class="video-opt-header"><div class="video-opt-title">Con Avatar</div><span class="video-opt-check">✓</span></div>
+              <div class="video-opt-desc">Persona o avatar IA hablando directamente a cámara.</div>
+              <a class="video-opt-link" href="https://drive.google.com/file/d/1wWG0vPHvpgvKTts5jxW0qzpvfM1lmVkt/view?usp=drive_link" target="_blank" onclick="event.stopPropagation()">▶ Ver ejemplo</a>
+            </div>
+          </div>
+          <div class="video-opt" id="opt-vo" onclick="selectVideoType('vo')">
+            <div class="video-thumb-placeholder">🎙️</div>
+            <div class="video-opt-body">
+              <div class="video-opt-header"><div class="video-opt-title">Solo VO</div><span class="video-opt-check">✓</span></div>
+              <div class="video-opt-desc">Voz en off con escenas e imágenes animadas con IA.</div>
+              <a class="video-opt-link" href="https://drive.google.com/file/d/1EnIZ74GuCMHLR7t53AXrqmIulkJkT6Rp/view?usp=drive_link" target="_blank" onclick="event.stopPropagation()">▶ Ver ejemplo</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ STEP 5: Personaje ══ -->
+  <div class="step" id="step-5">
+    <div class="card">
+      <div class="section-label">
+        <div class="section-icon">🧑‍💼</div>
+        <div><div class="section-title">Personaje visual</div><div class="section-desc">Representante en pantalla</div></div>
+      </div>
+      <div class="field">
+        <label>Género</label>
+        <div class="chips" data-group="genero" data-single="true">
+          <div class="chip" data-val="Mujer">👩 Mujer</div>
+          <div class="chip" data-val="Hombre">👨 Hombre</div>
+        </div>
+      </div>
+      <div class="field">
+        <label>Rango de edad</label>
+        <div class="chips" data-group="edad" data-single="true">
+          <div class="chip" data-val="30s">30s</div>
+          <div class="chip" data-val="40s">40s</div>
+          <div class="chip" data-val="50s">50s</div>
+        </div>
+      </div>
+      <div class="field">
+        <label>¿Ropa casual o uniforme?</label>
+        <div class="toggle-group">
+          <button class="toggle-btn" data-grp="ropa" data-val="Ropa casual" onclick="setRopa('casual',this)">👕 Ropa casual</button>
+          <button class="toggle-btn" data-grp="ropa" data-val="Uniforme" onclick="setRopa('uniforme',this)">🦺 Uniforme</button>
+        </div>
+      </div>
+      <div class="reveal" id="uniforme-si">
+        <div class="field">
+          <label>Prendas del uniforme</label>
+          <div class="chips" data-group="prendas">
+            <div class="chip" data-val="Playera Gris">Playera Gris</div>
+            <div class="chip" data-val="Casco">Casco</div>
+            <div class="chip" data-val="Lentes de seguridad">Lentes seguridad</div>
+            <div class="chip" data-val="Chaleco">Chaleco</div>
+          </div>
+        </div>
+        <div class="field"><label>Prendas adicionales</label><input type="text" id="f-prendas-extra" placeholder="Otra prenda..."></div>
+      </div>
+      <div class="field"><label>Acento del personaje</label><input type="text" id="f-acento" placeholder="Ej: mexicano neutro, colombiano, español de España..."></div>
+      <div class="field"><label>Identificador / Badge</label><input type="text" id="f-badge" placeholder="Ej: cintillo, badge con nombre, parche de área..."></div>
+    </div>
+  </div>
+
+  <!-- ══ STEP 6: Locación + Paleta ══ -->
+  <div class="step" id="step-6">
+    <div class="card">
+      <div class="section-label">
+        <div class="section-icon">📍</div>
+        <div><div class="section-title">Locación & Paleta</div><div class="section-desc">Entorno visual del video</div></div>
+      </div>
+      <div class="field">
+        <label>Tipo de locación</label>
+        <div class="chips" data-group="locacion">
+          <div class="chip" data-val="Oficinas terracota">Oficinas terracota</div>
+          <div class="chip" data-val="Sala de juntas">Sala de juntas</div>
+          <div class="chip" data-val="Planta">Planta</div>
+          <div class="chip" data-val="CEDIS">CEDIS</div>
+        </div>
+      </div>
+      <div class="field"><label>¿Hay algún espacio específico dentro de esa locación?</label><input type="text" id="f-espacio" placeholder="Ej: área de carga, sala de capacitación, línea de producción 3..."></div>
+      <div class="field">
+        <label>Paleta de colores</label>
+        <div class="chips" data-group="paleta-base" data-single="true">
+          <div class="chip" data-val="Colores KOF" onclick="setPaleta('kof')">🔴 Colores KOF</div>
+          <div class="chip" data-val="Colores CREA" onclick="setPaleta('crea')">🎨 Colores CREA</div>
+        </div>
+        <div class="sub-reveal" id="crea-sub">
+          <div class="sub-label">Color CREA específico:</div>
+          <div class="chips" data-group="crea-color" data-single="true">
+            <div class="chip" data-val="CREA Morado">🟣 Morado</div>
+            <div class="chip" data-val="CREA Verde">🟢 Verde</div>
+            <div class="chip" data-val="CREA Rojo">🔴 Rojo</div>
+            <div class="chip" data-val="CREA Naranja">🟠 Naranja</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ STEP 7: Gráficos + Música ══ -->
+  <div class="step" id="step-7">
+    <div class="card">
+      <div class="section-label">
+        <div class="section-icon">🎞️</div>
+        <div><div class="section-title">Gráficos, Cortinillas & Música</div><div class="section-desc">Elementos de producción</div></div>
+      </div>
+      <div class="field"><label>¿Qué logos deben incluirse?</label><input type="text" id="f-logos" placeholder="Ej: Coca-Cola FEMSA, marca del producto, área, todos..."></div>
+      <div class="field">
+        <label>¿Incluir diagrama animado?</label>
+        <div class="toggle-group">
+          <button class="toggle-btn" data-grp="diagrama" data-val="Sí" onclick="tog(this,'diag-si',null)">Sí</button>
+          <button class="toggle-btn" data-grp="diagrama" data-val="No" onclick="hideRev('diag-si',this)">No</button>
+        </div>
+      </div>
+      <div class="reveal" id="diag-si">
+        <div class="field"><label>¿Qué debe mostrar el diagrama?</label><input type="text" id="f-diagrama" placeholder="Pasos del proceso, flujo, estructura del equipo..."></div>
+      </div>
+      <div class="field"><label>Mensajes / datos clave como gráfico</label><textarea id="f-graficos" placeholder="Ej: datos clave, pasos de proceso, cifras de resultado..."></textarea></div>
+      <div class="field">
+        <label>Proporción Tomas vs. Gráficos</label>
+        <div class="slider3-options">
+          <div class="slider3-opt" id="sl-70" onclick="pickSlider('70/30')">
+            <div class="slider3-ratio">70 / 30</div>
+            <div class="slider3-label">Tomas / Gráficos</div>
+            <div class="slider3-hint">Invitación, comunicación corporativa, noticias internas.</div>
+          </div>
+          <div class="slider3-opt" id="sl-60" onclick="pickSlider('60/40')">
+            <div class="slider3-ratio">60 / 40</div>
+            <div class="slider3-label">Tomas / Gráficos</div>
+            <div class="slider3-hint">Videos mixtos. Capacitación con contexto narrativo.</div>
+          </div>
+          <div class="slider3-opt" id="sl-30" onclick="pickSlider('30/70')">
+            <div class="slider3-ratio">30 / 70</div>
+            <div class="slider3-label">Tomas / Gráficos</div>
+            <div class="slider3-hint">E-learning, lanzamiento de plataforma, explainer.</div>
+          </div>
+        </div>
+      </div>
+      <div class="field">
+        <label>Estilo de música</label>
+        <div class="chips" data-group="musica" data-single="true">
+          <div class="chip" data-val="Muy sutil de fondo">🎵 Sutil de fondo</div>
+          <div class="chip" data-val="Upbeat / empoderadora">⚡ Upbeat</div>
+          <div class="chip" data-val="Lleva todo el ritmo">🔊 Ritmo protagonista</div>
+        </div>
+      </div>
+      <div class="field"><label>Referencia musical</label><input type="text" id="f-musica-ref" placeholder="Canción, artista, playlist o mood..."></div>
+      <div class="field" style="margin-top:4px"><label>Notas adicionales</label><textarea id="f-notas" style="min-height:100px" placeholder="Restricciones de marca, preferencias especiales, referencias de videos anteriores, contexto del proyecto..."></textarea></div>
+    </div>
+
+    <div class="nav-row">
+      <button class="btn btn-back" onclick="changeStep(-1)">←</button>
+      <button class="btn btn-generate" id="btn-gen" onclick="generateRecap()">✦ Generar Recap con IA</button>
+    </div>
+
+    <!-- Recap screen -->
+    <div class="recap-outer" id="recap-outer">
+      <div class="recap-card" id="recap-card">
+        <div class="recap-top">
+          <div>
+            <div class="recap-badge">VoBo 1</div>
+            <div class="recap-titulo" id="r-titulo">—</div>
+            <div class="recap-meta" id="r-meta">—</div>
+          </div>
+          <div class="recap-fecha" id="r-fecha">—</div>
+        </div>
+        <div class="recap-sections" id="r-sections"></div>
+        <div class="recap-alcance" id="r-alcance" style="display:none">
+          <strong>⚠ Nota de alcance:</strong> Al confirmar este VoBo se activa el inicio del guión y el shotlist. Cualquier cambio posterior genera ajuste de alcance.
+        </div>
+      </div>
+      <div class="print-row" id="print-row">
+        <button class="btn-print btn" onclick="printRecap()">🖨️ Imprimir / PDF</button>
+        <button class="btn-approve btn" onclick="approveVoBo()">✅ APROBADO</button>
+      </div>
+      <div class="stamp" id="stamp">
+        <div class="stamp-inner"><span class="stamp-text">✓ VoBo 1 — Aprobado</span></div>
+        <div class="stamp-sub" id="stamp-date"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="nav-row" id="main-nav">
+    <button class="btn btn-back" id="btn-back" onclick="changeStep(-1)" style="display:none">←</button>
+    <button class="btn btn-next" onclick="changeStep(1)">Continuar →</button>
+  </div>
+
+</div><!-- /app -->
+
+<script>
+const TOTAL=7, NAMES=['Proyecto','Guión','Formato','Tipo de video','Personaje','Locación & Paleta','Gráficos & Música'];
+let cur=1, skipPersonaje=false, selectedVideoType='', selectedSlider='';
+
+// Build dots
+const dotsEl=document.getElementById('steps-nav');
+for(let i=1;i<=TOTAL;i++){const d=document.createElement('div');d.className='step-dot'+(i===1?' active':'');d.id='dot-'+i;d.onclick=()=>goTo(i);dotsEl.appendChild(d);}
+
+function updateUI(){
+  document.getElementById('step-label').textContent=`Paso ${cur} de ${TOTAL}`;
+  document.getElementById('step-name').textContent=NAMES[cur-1];
+  document.getElementById('progress-fill').style.width=(cur/TOTAL*100)+'%';
+  document.querySelectorAll('.step').forEach((s,i)=>s.classList.toggle('active',i+1===cur));
+  for(let i=1;i<=TOTAL;i++){const d=document.getElementById('dot-'+i);if(d)d.className='step-dot'+(i===cur?' active':i<cur?' done':'');}
+  document.getElementById('main-nav').style.display=cur===TOTAL?'none':'flex';
+  document.getElementById('btn-back').style.display=cur>1?'flex':'none';
+}
+function changeStep(dir){
+  let n=cur+dir;
+  if(n<1||n>TOTAL)return;
+  if(dir>0&&n===5&&skipPersonaje)n=6;
+  if(dir<0&&cur===6&&skipPersonaje)n=4;
+  cur=n;updateUI();window.scrollTo({top:0,behavior:'smooth'});
+}
+function goTo(n){cur=n;updateUI();window.scrollTo({top:0,behavior:'smooth'});}
+
+function selectVideoType(type){
+  selectedVideoType=type;skipPersonaje=(type==='vo');
+  document.getElementById('opt-avatar').classList.toggle('selected',type==='avatar');
+  document.getElementById('opt-vo').classList.toggle('selected',type==='vo');
+}
+function setRopa(tipo,btn){
+  document.querySelectorAll('.toggle-btn[data-grp="ropa"]').forEach(b=>b.classList.remove('selected'));
+  btn.classList.add('selected');
+  document.getElementById('uniforme-si').classList.toggle('show',tipo==='uniforme');
+}
+function setPaleta(tipo){document.getElementById('crea-sub').classList.toggle('show',tipo==='crea');}
+function pickSlider(val){
+  selectedSlider=val;
+  ['sl-70','sl-60','sl-30'].forEach(id=>document.getElementById(id).classList.remove('selected'));
+  const map={'70/30':'sl-70','60/40':'sl-60','30/70':'sl-30'};
+  document.getElementById(map[val])?.classList.add('selected');
+}
+
+document.querySelectorAll('.chips').forEach(grp=>{
+  grp.querySelectorAll('.chip').forEach(c=>{
+    if(c.getAttribute('onclick'))return;
+    c.addEventListener('click',()=>{
+      const single=grp.dataset.single==='true';
+      if(single)grp.querySelectorAll('.chip').forEach(x=>x.classList.remove('selected'));
+      c.classList.toggle('selected');
+    });
+  });
+});
+function pickChip(chip,grp,inpId,showInput=false){
+  document.querySelectorAll(`.chip[data-grp="${grp}"]`).forEach(c=>c.classList.remove('selected'));
+  chip.classList.add('selected');
+  const inp=document.getElementById(inpId);
+  if(showInput){inp.classList.add('show');setTimeout(()=>inp.focus(),50);}
+  else{inp.classList.remove('show');inp.value='';}
+}
+function tog(btn,showId,hideId){
+  const grp=btn.dataset.grp;
+  document.querySelectorAll(`.toggle-btn[data-grp="${grp}"]`).forEach(b=>b.classList.remove('selected'));
+  btn.classList.add('selected');
+  if(showId)document.getElementById(showId)?.classList.add('show');
+  if(hideId)document.getElementById(hideId)?.classList.remove('show');
+}
+function hideRev(id,btn){
+  document.getElementById(id)?.classList.remove('show');
+  const grp=btn.dataset.grp;
+  document.querySelectorAll(`.toggle-btn[data-grp="${grp}"]`).forEach(b=>b.classList.remove('selected'));
+  btn.classList.add('selected');
+}
+
+// Data helpers
+function v(id){return document.getElementById(id)?.value?.trim()||'';}
+function chips(grp){return[...document.querySelectorAll(`.chips[data-group="${grp}"] .chip.selected`)].map(c=>c.dataset.val).join(', ')||'';}
+function tog_v(grp){return document.querySelector(`.toggle-btn[data-grp="${grp}"].selected`)?.dataset.val||'';}
+function chipSingle(grp,inpId){
+  const s=document.querySelector(`.chip[data-grp="${grp}"].selected`);
+  if(!s)return'';
+  if(s.dataset.val==='__otro__'){const t=v(inpId);return t||'Otro';}
+  return s.dataset.val;
+}
+function paletaVal(){
+  const b=document.querySelector('.chips[data-group="paleta-base"] .chip.selected');
+  if(!b)return'';
+  if(b.dataset.val==='Colores CREA'){const s=document.querySelector('.chips[data-group="crea-color"] .chip.selected');return s?s.dataset.val:'Colores CREA';}
+  return b.dataset.val;
+}
+
+function collectAll(){
+  const ropa=tog_v('ropa');
+  const tipoVideo=selectedVideoType==='avatar'?'Con Avatar (persona a cámara)':selectedVideoType==='vo'?'Solo VO (voz en off con escenas IA)':'';
+  return {
+    proyecto:v('f-proyecto'),contacto:v('f-contacto'),fecha:v('f-fecha'),
+    idioma:chipSingle('idioma','idioma-inp'),subtitulos:chipSingle('sub','sub-inp'),
+    tieneGuion:tog_v('tiene-guion'),guionCambios:tog_v('g-cambios'),
+    brinca:v('f-brinca'),gusta:v('f-gusta'),ajuste:chips('g-ajuste'),
+    mensaje:v('f-mensaje'),audiencia:v('f-audiencia'),accion:v('f-accion'),
+    referencia:v('f-referencia'),duracion:v('f-duracion'),
+    ratio:chips('ratio'),plataforma:v('f-plataforma'),
+    tipoVideo,
+    genero:chips('genero'),edad:chips('edad'),
+    ropa,prendas:chips('prendas'),prendasExtra:v('f-prendas-extra'),
+    acento:v('f-acento'),badge:v('f-badge'),
+    locacion:chips('locacion'),espacio:v('f-espacio'),
+    paleta:paletaVal(),
+    logos:v('f-logos'),
+    diagrama:tog_v('diagrama'),diagramaDesc:v('f-diagrama'),
+    graficos:v('f-graficos'),
+    proporcion:selectedSlider||'No especificada',
+    musica:chips('musica'),musicaRef:v('f-musica-ref'),
+    notas:v('f-notas'),
+  };
+}
+
+// Recap section
+function sec(label,val){
+  if(!val||val.trim()==='')return'';
+  return`<div class="recap-sec"><div class="recap-sec-label">${label}</div><div class="recap-sec-val">${val}</div></div>`;
+}
+
+// ── GENERATE ──
+async function generateRecap(){
+  const d=collectAll();
+  const btn=document.getElementById('btn-gen');
+  btn.disabled=true;btn.textContent='Generando...';
+
+  document.getElementById('r-titulo').textContent=d.proyecto||'Proyecto sin nombre';
+  document.getElementById('r-meta').textContent=`Aprobador: ${d.contacto||'—'}`;
+  const fStr=d.fecha?new Date(d.fecha+'T12:00').toLocaleDateString('es-MX',{day:'2-digit',month:'long',year:'numeric'}):'—';
+  document.getElementById('r-fecha').textContent=`Entrega: ${fStr}`;
+  document.getElementById('recap-outer').style.display='block';
+  document.getElementById('r-sections').innerHTML='<div class="recap-loading"><div class="spinner"></div><span>Claude está redactando el recap...</span></div>';
+  document.getElementById('r-alcance').style.display='none';
+  window.scrollTo({top:document.getElementById('recap-outer').offsetTop-20,behavior:'smooth'});
+
+  const soloVO=selectedVideoType==='vo';
+  const guionTxt=d.tieneGuion==='Sí'
+    ?`TIENE guión. Estado: ${d.guionCambios||'no especificado'}.${d.guionCambios==='Requiere cambios'?` Qué no le gusta: ${d.brinca}. Qué conservar: ${d.gusta}. A ajustar: ${d.ajuste}.`:''}`
+    :`NO tiene guión. Mensaje central: ${d.mensaje}. Audiencia: ${d.audiencia}. Emoción/acción deseada: ${d.accion}. Referencia: ${d.referencia}. Duración: ${d.duracion}.`;
+
+  const ropaTxt=d.ropa==='Uniforme'
+    ?`Uniforme: ${d.prendas}${d.prendasExtra?', '+d.prendasExtra:''}.`
+    :'Ropa casual.';
+
+  const prompt=`Eres el productor creativo senior de producción de video con IA para Coca-Cola FEMSA.
+Genera un resumen ejecutivo de VoBo 1 en español. Tono directo y confiado, como si lo leyeras en una llamada para confirmar el brief al cliente.
+
+Responde SOLO con un JSON válido (sin markdown, sin backticks, sin texto extra) con estas claves:
+{
+  "mensaje_central": "Qué debe transmitir el video y por qué importa (2-3 oraciones)",
+  "guion": "Estado del guión y próximos pasos (1-2 oraciones)",
+  "formato": "Formato, aspect ratio y plataforma (1 oración)",
+  "tipo_video": "Tipo de producción seleccionada (1 oración)",
+  "personaje": "Descripción completa del personaje o indicación de solo VO (1-2 oraciones)",
+  "locacion": "Locación y espacio específico (1 oración)",
+  "paleta": "Paleta de colores a usar (1 oración)",
+  "graficos": "Proporción tomas/gráficos, logos, diagramas y datos clave (2-3 oraciones)",
+  "musica": "Estilo musical y referencia (1 oración)",
+  "idioma": "Idioma y subtítulos (1 oración)",
+  "notas": "Notas adicionales importantes o null si no hay"
+}
+
+Cada valor debe sonar como confirmación directa al cliente ("Vamos a producir...", "El personaje será...", etc.).
+Si no hay info suficiente para un campo, pon null.
+
+DATOS DEL BRIEF:
+Proyecto: ${d.proyecto||'—'} | Contacto: ${d.contacto||'—'} | Entrega: ${fStr}
+Idioma: ${d.idioma||'—'} | Subtítulos: ${d.subtitulos||'—'}
+Guión: ${guionTxt}
+Formato: ${d.ratio||'—'} | Plataforma: ${d.plataforma||'—'}
+Tipo de video: ${d.tipoVideo||'—'}
+Personaje: ${soloVO?'Solo voz en off, sin personaje visual.':`${d.genero}, ${d.edad}. ${ropaTxt} Acento: ${d.acento||'no especificado'}. Badge/ID: ${d.badge||'no especificado'}.`}
+Locación: ${d.locacion||'—'}${d.espacio?' — Espacio: '+d.espacio:''}
+Paleta: ${d.paleta||'—'}
+Logos: ${d.logos||'—'} | Diagrama: ${d.diagrama||'—'}${d.diagramaDesc?' ('+d.diagramaDesc+')':''}
+Datos/gráficos clave: ${d.graficos||'—'}
+Proporción tomas/gráficos: ${d.proporcion}
+Música: ${d.musica||'—'} | Referencia musical: ${d.musicaRef||'—'}
+Notas adicionales: ${d.notas||'ninguna'}`;
+
+  try{
+    const res=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:1400,messages:[{role:"user",content:prompt}]})});
+    const data=await res.json();
+    let txt=data.content?.map(b=>b.text||'').join('')||'';
+    txt=txt.replace(/```json|```/g,'').trim();
+    const m=txt.match(/\{[\s\S]*\}/);
+    let parsed=null;
+    if(m){try{parsed=JSON.parse(m[0]);}catch(e){}}
+    if(parsed){
+      const map=[
+        ['mensaje_central','Mensaje central'],['guion','Guión'],['formato','Formato & plataforma'],
+        ['tipo_video','Tipo de video'],['personaje','Personaje'],['locacion','Locación'],
+        ['paleta','Paleta de colores'],['graficos','Gráficos & cortinillas'],
+        ['musica','Música'],['idioma','Idioma & subtítulos'],['notas','Notas adicionales'],
+      ];
+      let html='';
+      map.forEach(([k,lbl])=>{if(parsed[k]&&parsed[k]!=='null'&&parsed[k]!='')html+=sec(lbl,parsed[k]);});
+      document.getElementById('r-sections').innerHTML=html||'<p style="color:var(--mid);padding:12px 0">Sin datos suficientes.</p>';
+    } else {
+      fallbackRecap(d,soloVO,fStr);
+    }
+  }catch(e){fallbackRecap(d,soloVO,fStr);}
+
+  document.getElementById('r-alcance').style.display='block';
+  btn.disabled=false;btn.textContent='✦ Volver a generar';
+}
+
+function fallbackRecap(d,soloVO,fStr){
+  const ropaTxt=d.ropa==='Uniforme'?`Uniforme: ${d.prendas}${d.prendasExtra?', '+d.prendasExtra:''}.`:'Ropa casual.';
+  let html='';
+  if(d.tieneGuion!=='Sí'&&d.mensaje)html+=sec('Mensaje central',d.mensaje);
+  html+=sec('Guión',d.tieneGuion==='Sí'?`Guión existente. Estado: ${d.guionCambios||'—'}${d.ajuste?' | Ajustes en: '+d.ajuste:''}.`:`Se construye desde cero. Audiencia: ${d.audiencia||'—'}. Duración: ${d.duracion||'—'}.`);
+  html+=sec('Formato & plataforma',[d.ratio,d.plataforma].filter(Boolean).join(' | '));
+  html+=sec('Tipo de video',d.tipoVideo);
+  if(!soloVO)html+=sec('Personaje',`${d.genero||'—'}, ${d.edad||'—'}. ${ropaTxt} Acento: ${d.acento||'—'}. Badge: ${d.badge||'—'}.`);
+  html+=sec('Locación',`${d.locacion||'—'}${d.espacio?' — '+d.espacio:''}`);
+  html+=sec('Paleta de colores',d.paleta);
+  html+=sec('Gráficos & cortinillas',`Proporción: ${d.proporcion}. Logos: ${d.logos||'—'}.${d.diagrama==='Sí'?' Diagrama: '+d.diagramaDesc:''}`);
+  html+=sec('Música',`${d.musica||'—'}${d.musicaRef?' | '+d.musicaRef:''}`);
+  html+=sec('Idioma & subtítulos',[d.idioma,d.subtitulos].filter(Boolean).join(' | '));
+  if(d.notas)html+=sec('Notas adicionales',d.notas);
+  document.getElementById('r-sections').innerHTML=html||'<p style="color:var(--mid);padding:12px">Completa el formulario para generar el recap.</p>';
+}
+
+// ── PRINT — opens a new clean window with just the recap ──
+function printRecap(){
+  const titulo=document.getElementById('r-titulo').textContent;
+  const meta=document.getElementById('r-meta').textContent;
+  const fecha=document.getElementById('r-fecha').textContent;
+  const sections=document.getElementById('r-sections').innerHTML;
+  const alcance=document.getElementById('r-alcance').textContent;
+  const stampVisible=document.getElementById('stamp').classList.contains('show');
+  const stampDate=document.getElementById('stamp-date').textContent;
+
+  const html=`<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>VoBo 1 — ${titulo}</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{font-family:'DM Sans',sans-serif;color:#1C1210;background:white;padding:40px;}
+  .wrap{max-width:680px;margin:0 auto;}
+  .badge{display:inline-block;background:#CC0000;color:white;font-size:9px;letter-spacing:0.15em;text-transform:uppercase;padding:3px 11px;border-radius:99px;font-weight:600;margin-bottom:10px;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+  .titulo{font-family:'Playfair Display',serif;font-size:26px;font-weight:600;color:#1C1210;}
+  .meta{font-size:12px;color:#6B5E52;margin-top:4px;}
+  .fecha{font-size:12px;color:#C4B5A5;text-align:right;white-space:nowrap;}
+  .top{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;border-bottom:2px solid #1C1210;padding-bottom:16px;margin-bottom:22px;}
+  .sec{display:grid;grid-template-columns:140px 1fr;gap:14px;padding:11px 0;border-bottom:1px solid #EAE0D5;}
+  .sec:last-child{border-bottom:none;}
+  /* Convert recap-sec styles */
+  .recap-sec{display:grid;grid-template-columns:140px 1fr;gap:14px;padding:11px 0;border-bottom:1px solid #EAE0D5;}
+  .recap-sec:last-child{border-bottom:none;}
+  .recap-sec-label{font-size:9px;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;color:#C4B5A5;padding-top:2px;}
+  .recap-sec-val{font-size:12px;color:#1C1210;line-height:1.65;}
+  .alcance{margin-top:20px;padding:12px 14px;background:#FFF0F0;border:1px solid #CC0000;border-radius:8px;font-size:11px;color:#6B5E52;line-height:1.6;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+  .alcance strong{color:#CC0000;}
+  .stamp-wrap{margin-top:24px;text-align:center;}
+  .stamp-inner{display:inline-block;border:2.5px solid #2C7A4B;border-radius:10px;padding:12px 28px;}
+  .stamp-txt{font-family:'Playfair Display',serif;font-size:22px;color:#2C7A4B;font-style:italic;display:block;}
+  .stamp-sub{font-size:10px;color:#C4B5A5;margin-top:4px;}
+  @media print{body{padding:24px;}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <div>
+      <div class="badge">VoBo 1</div>
+      <div class="titulo">${titulo}</div>
+      <div class="meta">${meta}</div>
+    </div>
+    <div class="fecha">${fecha}</div>
+  </div>
+  <div>${sections}</div>
+  <div class="alcance"><strong>⚠ Nota de alcance:</strong> ${alcance.replace('⚠ Nota de alcance:','').trim()}</div>
+  ${stampVisible?`<div class="stamp-wrap"><div class="stamp-inner"><span class="stamp-txt">✓ VoBo 1 — Aprobado</span><div class="stamp-sub">${stampDate}</div></div></div>`:''}
+</div>
+<script>window.onload=()=>{window.print();}<\/script>
+</body>
+</html>`;
+
+  const w=window.open('','_blank','width=800,height=900');
+  w.document.write(html);
+  w.document.close();
+}
+
+function approveVoBo(){
+  document.getElementById('stamp').classList.add('show');
+  const now=new Date();
+  document.getElementById('stamp-date').textContent=`Aprobado por ${v('f-contacto')||'cliente'} · ${now.toLocaleDateString('es-MX',{day:'2-digit',month:'long',year:'numeric'})} · ${now.toLocaleTimeString('es-MX',{hour:'2-digit',minute:'2-digit'})}`;
+  document.getElementById('print-row').style.display='none';
+  window.scrollTo({top:document.getElementById('stamp').offsetTop-20,behavior:'smooth'});
+}
+
+updateUI();
+</script>
+</body>
+</html>
